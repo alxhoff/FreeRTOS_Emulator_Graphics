@@ -49,7 +49,7 @@ typedef void (*callback_t)(void *args);
  * A ball is created with a starting X and Y location (center of the ball),
  * initial X and Y axis speeds (dx and dy respectively), as well as a limiting
  * maximum speed, a colour and a radius. A callback function can be passed to
- * the ball creation function createBall with the form void (*callback)(void),
+ * the ball creation function gfxCreateBall with the form void (*callback)(void),
  * which is called each time the ball collides with a wall.
  *
  * The absolute location of the ball is stored in the floats f_x and f_y, this
@@ -60,7 +60,7 @@ typedef void (*callback_t)(void *args);
  * The colour of the ball is a 24bit hex colour code of the format RRGGBB.
  *
  * A ball is created with initial speeds (dx and dy) of zero. The speed of the
- * ball must be set to a non-zero value using setBallSpeed before the ball will
+ * ball must be set to a non-zero value using gfxSetBallSpeed before the ball will
  * start to move.
  */
 typedef struct ball {
@@ -93,7 +93,7 @@ typedef struct ball {
  * and the width and height of the desired wall. The wall also stores a colour that
  * can be used to render it, allowing for the information to be stored in the object.
  * A wall interacts with balls automatically as all walls generated are stored in
- * a list that is iterated though by the function checkBallCollisions.
+ * a list that is iterated though by the function gfxCheckBallCollisions.
  *
  * When a wall is collided with it causes a ball to loose or gain speed, the
  * dampening is a normalized percentage value that is used to either increase or
@@ -134,7 +134,7 @@ typedef struct wall {
  *
  * Example use:
  * @code
- * ball_t *my_ball = createBall(SCREEN_WIDTH / 2, SCREEN_HEIGHT/2, Black, 20,
+ * ball_t *my_ball = gfxCreateBall(SCREEN_WIDTH / 2, SCREEN_HEIGHT/2, Black, 20,
  *      1000, &playBallSound);
  * @endcode
  *

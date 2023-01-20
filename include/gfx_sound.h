@@ -64,18 +64,18 @@
     SAMPLE(g5)
 
 /**
- * @enum tumSound_samples_e
+ * @enum gfxSound_samples_e
  * @brief Enum containing the currently loaded wav samples
  *
  * The waveforms located in the resource/waveforms folder are added using the
  * @ref FOR_EACH_SAMPLE macro to generate an enum that can be used to access
  * the appropriate sample from the internal sample list.
  */
-enum tumSound_samples_e { FOR_EACH_SAMPLE(GEN_ENUM) };
+enum gfxSound_samples_e { FOR_EACH_SAMPLE(GEN_ENUM) };
 
 /**
  * @brief Initializes the SDL2 Mixer library and loads the wav samples specified
- * in the @ref tumSound_samples_e
+ * in the @ref gfxSound_samples_e
  *
  * @param bin_dir_str String specifying where the program's binary is located
  * @return 0 on success
@@ -90,7 +90,7 @@ void gfxSoundExit(void);
 /**
  * @brief Plays a wav sample
  *
- * @param index Index to specify which sample to play, @ref tumSound_samples_e gives
+ * @param index Index to specify which sample to play, @ref gfxSound_samples_e gives
  * appropriate indices
  */
 void gfxSoundPlaySample(unsigned char index);
