@@ -47,7 +47,7 @@
 
 // Ring buffer
 struct ring_buf {
-    void* buffer;
+    void *buffer;
     _Atomic int head; // Next free slot
     _Atomic int tail; // Last stored value
     size_t size;
@@ -76,9 +76,9 @@ void gfxUtilSetGLThread(void)
     pthread_mutex_unlock(&GL_thread_lock);
 }
 
-char* gfxUtilPrependPath(const char* path, char* file)
+char *gfxUtilPrependPath(const char *path, char *file)
 {
-    char* ret = calloc(1, sizeof(char) * (strlen(path) + strlen(file) + 2));
+    char *ret = calloc(1, sizeof(char) * (strlen(path) + strlen(file) + 2));
     if (!ret) {
         fprintf(stderr, "[ERROR] prepend_bin_path malloc failed\n");
         return NULL;
@@ -90,11 +90,11 @@ char* gfxUtilPrependPath(const char* path, char* file)
     return ret;
 }
 
-char* gfxUtilGetBinFolderPath(char* bin_path)
+char *gfxUtilGetBinFolderPath(char *bin_path)
 {
-    char* dir_name = dirname(bin_path);
+    char *dir_name = dirname(bin_path);
 
-    char* ret = calloc(1, sizeof(char) * (strlen(dir_name) + 1));
+    char *ret = calloc(1, sizeof(char) * (strlen(dir_name) + 1));
     assert(ret);
 
     strcpy(ret, dir_name);
@@ -116,11 +116,11 @@ char* gfxUtilGetBinFolderPath(char* bin_path)
  * @return A reference to the statically allocated buffer where the filename
  * is being stored, else NULL
  */
-static char* _recurseDirName(const char* dir_name, char* filename, char flags)
+static char *_recurseDirName(const char *dir_name, char *filename, char flags)
 {
-    char* ret = NULL;
-    struct dirent* dirp;
-    DIR* dp;
+    char *ret = NULL;
+    struct dirent *dirp;
+    DIR *dp;
     static char wdir[PATH_MAX];
     dp = opendir(dir_name);
 
@@ -132,34 +132,34 @@ static char* _recurseDirName(const char* dir_name, char* filename, char flags)
 
     while ((dirp = readdir(dp)) != NULL) {
         switch (dirp->d_type) {
-        case DT_DIR:
-            if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, "..")) {
-                continue;
-            }
-            if (flags & INCLUDE_DIR_NAMES)
-                if (!strcmp(filename, dirp->d_name)) {
-                    goto found;
+            case DT_DIR:
+                if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, "..")) {
+                    continue;
                 }
-            strcpy(wdir, dir_name);
-            strcat(wdir, "/");
-            strcat(wdir, dirp->d_name);
-            ret = _recurseDirName(wdir, filename, flags);
-            if (ret) {
-                return ret;
-            }
-            break;
-        case DT_REG:
-            if (!strcmp(filename, dirp->d_name)) {
-            found:
+                if (flags & INCLUDE_DIR_NAMES)
+                    if (!strcmp(filename, dirp->d_name)) {
+                        goto found;
+                    }
                 strcpy(wdir, dir_name);
                 strcat(wdir, "/");
-                strcat(wdir, filename);
-                return wdir;
-            }
-            break;
-        default:
-            printf("Found file of type %d", dirp->d_type);
-            break;
+                strcat(wdir, dirp->d_name);
+                ret = _recurseDirName(wdir, filename, flags);
+                if (ret) {
+                    return ret;
+                }
+                break;
+            case DT_REG:
+                if (!strcmp(filename, dirp->d_name)) {
+found:
+                    strcpy(wdir, dir_name);
+                    strcat(wdir, "/");
+                    strcat(wdir, filename);
+                    return wdir;
+                }
+                break;
+            default:
+                printf("Found file of type %d", dirp->d_type);
+                break;
         }
     }
     return ret;
@@ -168,28 +168,29 @@ err:
     return NULL;
 }
 
-static FILE* _recurseDirFile(
-    const char* dir_name, char* filename, const char* mode)
+static FILE *_recurseDirFile(
+    const char *dir_name, char *filename, const char *mode)
 {
     return fopen(_recurseDirName(dir_name, filename, 0), mode);
 }
 
-const char* gfxUtilFindResourceDirectory(void)
+const char *gfxUtilFindResourceDirectory(void)
 {
     static char ret_dir[PATH_MAX];
 
     if (access(RESOURCES_DIRECTORY, F_OK) != -1) {
         strcpy(ret_dir, RESOURCES_DIRECTORY);
         return ret_dir;
-    } else {
+    }
+    else {
         strcpy(ret_dir,
-            _recurseDirName(
-                ".", basename(RESOURCES_DIRECTORY), INCLUDE_DIR_NAMES));
+               _recurseDirName(
+                   ".", basename(RESOURCES_DIRECTORY), INCLUDE_DIR_NAMES));
         return ret_dir;
     }
 }
 
-FILE* gfxUtilFindResource(char* resource_name, const char* mode)
+FILE *gfxUtilFindResource(char *resource_name, const char *mode)
 {
     if (!resource_name) {
         PRINT_ERROR("Cannot find invalid resource name");
@@ -197,12 +198,13 @@ FILE* gfxUtilFindResource(char* resource_name, const char* mode)
     }
     if (access(resource_name, F_OK) != -1) {
         return fopen(resource_name, mode);
-    } else
+    }
+    else
         return _recurseDirFile(
-            gfxUtilFindResourceDirectory(), basename(resource_name), mode);
+                   gfxUtilFindResourceDirectory(), basename(resource_name), mode);
 }
 
-char* gfxUtilFindResourcePath(char* resource_name)
+char *gfxUtilFindResourcePath(char *resource_name)
 {
     if (!resource_name) {
         PRINT_ERROR("Cannot find invalid resource name");
@@ -211,9 +213,10 @@ char* gfxUtilFindResourcePath(char* resource_name)
 
     if (access(resource_name, F_OK) != -1) {
         return resource_name;
-    } else
+    }
+    else
         return _recurseDirName(
-            gfxUtilFindResourceDirectory(), basename(resource_name), 0);
+                   gfxUtilFindResourceDirectory(), basename(resource_name), 0);
 }
 
 static void _inc_buf(rbuf_handle_t rbuf)
@@ -222,14 +225,15 @@ static void _inc_buf(rbuf_handle_t rbuf)
         return;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     if (rb->full) {
         rb->tail += 1;
         rb->tail %= rb->size;
 
         rb->head = rb->tail;
-    } else {
+    }
+    else {
         rb->head += 1;
         rb->head %= rb->size;
     }
@@ -243,7 +247,7 @@ static void _dec_buf(rbuf_handle_t rbuf)
         return;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     rb->full = 0;
     rb->tail += 1;
@@ -252,7 +256,7 @@ static void _dec_buf(rbuf_handle_t rbuf)
 
 rbuf_handle_t gfxRbufInit(size_t item_size, size_t item_count)
 {
-    struct ring_buf* ret = (struct ring_buf*)calloc(1, sizeof(struct ring_buf));
+    struct ring_buf *ret = (struct ring_buf *)calloc(1, sizeof(struct ring_buf));
 
     if (ret == NULL) {
         goto err_alloc_rbuf;
@@ -278,13 +282,13 @@ err_alloc_rbuf:
 }
 
 rbuf_handle_t gfxRbufInitStatic(
-    size_t item_size, size_t item_count, void* buffer)
+    size_t item_size, size_t item_count, void *buffer)
 {
     if (buffer == NULL) {
         goto err_buffer;
     }
 
-    struct ring_buf* ret = (struct ring_buf*)calloc(1, sizeof(struct ring_buf));
+    struct ring_buf *ret = (struct ring_buf *)calloc(1, sizeof(struct ring_buf));
 
     if (ret == NULL) {
         goto err_alloc_rbuf;
@@ -321,7 +325,7 @@ void gfxRbufReset(rbuf_handle_t rbuf)
         return;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     rb->head = 0;
     rb->tail = 0;
@@ -337,7 +341,7 @@ int gfxRbufPutBuffer(rbuf_handle_t rbuf)
         return -1;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     _dec_buf(rb);
 
@@ -345,13 +349,13 @@ int gfxRbufPutBuffer(rbuf_handle_t rbuf)
 }
 
 // Add data
-int gfxRbufPut(rbuf_handle_t rbuf, void* data)
+int gfxRbufPut(rbuf_handle_t rbuf, void *data)
 {
     if (rbuf == NULL) {
         return -1;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     if (rb->buffer == NULL) {
         return -1;
@@ -369,13 +373,13 @@ int gfxRbufPut(rbuf_handle_t rbuf, void* data)
 }
 
 // Add and overwrite
-int gfxRbufFPut(rbuf_handle_t rbuf, void* data)
+int gfxRbufFPut(rbuf_handle_t rbuf, void *data)
 {
     if (rbuf == NULL) {
         return -1;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     if (rb->buffer == NULL) {
         return -1;
@@ -390,15 +394,15 @@ int gfxRbufFPut(rbuf_handle_t rbuf, void* data)
 
 // Get pointer to buffer slot
 // Works similar to put except it just returns a pointer to the ringbuf slot
-void* gfxRbufGetBuffer(rbuf_handle_t rbuf)
+void *gfxRbufGetBuffer(rbuf_handle_t rbuf)
 {
     static const _Atomic int increment = 1;
     if (rbuf == NULL) {
         return NULL;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
-    void* ret;
+    struct ring_buf *rb = CAST_RBUF(rbuf);
+    void *ret;
 
     if (rb->buffer == NULL) {
         return NULL;
@@ -408,7 +412,7 @@ void* gfxRbufGetBuffer(rbuf_handle_t rbuf)
         return NULL;
     }
 
-    int offset = __sync_fetch_and_add((int*)&rb->head, increment);
+    int offset = __sync_fetch_and_add((int *)&rb->head, increment);
 
     ret = rb->buffer + offset * rb->item_size;
 
@@ -418,13 +422,13 @@ void* gfxRbufGetBuffer(rbuf_handle_t rbuf)
 }
 
 // Get data
-int gfxRbufGet(rbuf_handle_t rbuf, void* data)
+int gfxRbufGet(rbuf_handle_t rbuf, void *data)
 {
     if (rbuf == NULL) {
         return -1;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     if (rb->buffer == NULL) {
         return -1;
@@ -447,7 +451,7 @@ unsigned char gfxRbufEmpty(rbuf_handle_t rbuf)
         return -1;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     return (!rb->full) && (rb->head == rb->tail);
 }
@@ -458,7 +462,7 @@ unsigned char gfxRbufFull(rbuf_handle_t rbuf)
         return -1;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     return rb->full;
 }
@@ -470,7 +474,7 @@ size_t gfxRbufSize(rbuf_handle_t rbuf)
         return -1;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     ssize_t ret = rb->size;
 
@@ -491,7 +495,7 @@ size_t gfxRbufCapacity(rbuf_handle_t rbuf)
         return -1;
     }
 
-    struct ring_buf* rb = CAST_RBUF(rbuf);
+    struct ring_buf *rb = CAST_RBUF(rbuf);
 
     return rb->size;
 }
