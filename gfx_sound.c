@@ -41,7 +41,7 @@
 
 Mix_Chunk *samples[NUM_WAVEFORMS] = { 0 };
 
-static char TUMSound_online = 0;
+static char gfxSound_online = 0;
 
 typedef struct loaded_sample {
     char *name;
@@ -112,7 +112,7 @@ int gfxSoundInit(char *bin_dir_str)
         free(fullWaveFileNames[j]);
     }
 
-    TUMSound_online = 1;
+    gfxSound_online = 1;
 
     atexit(gfxSoundExit);
 
@@ -140,7 +140,7 @@ err_file_names:
 void gfxSoundPlaySample(unsigned char index)
 {
 #ifndef DOCKER
-    if (TUMSound_online) {
+    if (gfxSound_online) {
         Mix_PlayChannel(-1, samples[index], 0);
     }
 #endif /* DOCKER */
@@ -148,7 +148,7 @@ void gfxSoundPlaySample(unsigned char index)
 
 int gfxSoundLoadUserSample(const char *filepath)
 {
-    if (!TUMSound_online) {
+    if (!gfxSound_online) {
         PRINT_ERROR(
             "Trying to load sample without calling 'gfxSoundInit'");
         return -1;
