@@ -468,16 +468,176 @@ int gfxDrawLoadedImage(gfx_image_handle_t img, signed short x, signed short y);
 int gfxDrawImage(char *filename, signed short x, signed short y);
 
 /**
- * @brief Creates a spritesheet object from a loaded image
+ * @brief Creates a spritesheet object from a loaded image where
+ * each sprite is not padded and the sprite sheet is divided into
+ * an number of equal sized rows and columns
+ *
+ * Creates a spritesheet and returns a handle to the spritesheet,
+ * requires the sprite sheet to be evenly divisable by a number of
+ * columns and rows. Eg. if your source image is 200 pixels wide
+ * and 20 pixels high, containing ten 20x20 sprites, then you
+ * must specify that there are 10 sprite columns and 1 row.
+ * If your sprite sequence is part of a large and less sorted
+ * sprite sheet, or had image padding, see the other LoadSpritesheet
+ * functions.
  *
  * @param img Loaded image to be used as the sprite sheet
  * @param sprite_cols Number of columns on the sprite sheet
  * @param sprite_rows Number of rows on the sprite sheet
- * @return 0 on success
+ * @return None NULL handle to reference spritesheet object
  */
-gfx_spritesheet_handle_t gfxDrawLoadSpritesheet(gfx_image_handle_t img,
-        unsigned sprite_cols,
-        unsigned sprite_rows);
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromEntireImageUnpadded(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows);
+
+/**
+ * @brief Creates a spritesheet object from a loaded image where sprites
+ * are padded
+ *
+ * Creates a spritesheet and returns a handle to the spritesheet,
+ * requires the sprite sheet to be evenly divisable by a number of
+ * columns and rows, where each entry contains padding around the
+ * sprite. Eg. if your source image is 200 pixels wide and 20 pixels
+ * high, containing ten 20x20 sprites, then you must specify that
+ * there are 10 sprite columns and 1 row.
+ *
+ * The padding size is specified as the number of pixels around each
+ * sprite on the X and Y, if you would rather just specify the spacing
+ * between each image then use, gfxDrawLoadSpritesheetFromEntireImagePadded
+ *
+ * @param img Loaded image to be used as the sprite sheet
+ * @param sprite_cols Number of columns on the sprite sheet
+ * @param sprite_rows Number of rows on the sprite sheet
+ * @param sprite_padding_x Number of pixels padding each sprite on one edge
+ * on the X axis
+ * @param sprite_padding_y Number of pixels padding each sprite on one edge
+ * on the Y axis
+ * @return None NULL handle to reference spritesheet object
+ */
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromEntireImagePadded(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_padding_x, unsigned sprite_padding_y);
+
+/**
+ * @brief Creates a spritesheet object from a loaded image where sprites
+ * are padded
+ *
+ * Creates a spritesheet and returns a handle to the spritesheet,
+ * requires the sprite sheet to be evenly divisable by a number of
+ * columns and rows, where each entry contains padding around the
+ * sprite. Eg. if your source image is 200 pixels wide and 20 pixels
+ * high, containing ten 20x20 sprites, then you must specify that
+ * there are 10 sprite columns and 1 row.
+ *
+ * It is assumed here that half the spacing can be found as padding around
+ * sprites bordering the edge of the sprite sheet. If this is not the case,
+ * it is reccomended to modify your sprite sheet to add appropriate padding.
+ *
+ * @param img Loaded image to be used as the sprite sheet
+ * @param sprite_cols Number of columns on the sprite sheet
+ * @param sprite_rows Number of rows on the sprite sheet
+ * @param sprite_spacing_x Spacing, in pixels, between images on the X axis
+ * @param sprite_spacing_y Spacing, in pixels, between images on the Y axis
+ * @return None NULL handle to reference spritesheet object
+ */
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromEntireImagePaddedSpacing(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_spacing_x, unsigned sprite_spacing_y);
+
+/**
+ * @brief Creates a spritesheet object from a portion of a loaded image
+ * where sprites are unpadded
+ *
+ * Creates a spritesheet and returns a handle to the spritesheet,
+ * the sprite sheet here is assumed to be a mix of sprite sequences,
+ * as such you can create a spritesheet that specifies a portion of
+ * the image where a sprite sequence is contained. Assumed here is that
+ * the sprites are unpadded.
+ *
+ * @param img Loaded image to be used as the sprite sheet
+ * @param sprite_cols Number of columns on the sprite sheet
+ * @param sprite_rows Number of rows on the sprite sheet
+ * @param sprite_width Width, in pixels, of each sprite
+ * @param sprite_height Height, in pixels, of each sprite
+ * @param bounding_box_left_x_pixel The X pixel location of the bounding
+ * box, bounding the portion of the image to be used, starts (top left point)
+ * NOTE: this location should be the start of the first sprite, without padding!
+ * @param bounding_box_top_y_pixel The Y pixel location where the bounding
+ * box, bounding the portion of the image to be used, starts (top left point)
+ * NOTE: this location should be the start of the first sprite, without padding!
+ * @return None NULL handle to reference spritesheet object
+ */
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromPortionOfImageUnpadded(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_width, unsigned sprite_height,
+    unsigned bounding_box_left_x_pixel, unsigned bounding_box_top_y_pixel);
+
+/**
+ * @brief Creates a spritesheet object from a portion of loaded image
+ * where sprites are padded
+ *
+ * Creates a spritesheet and returns a handle to the spritesheet,
+ * the sprite sheet here is assumed to be a mix of sprite sequences,
+ * as such you can create a spritesheet that specifies a portion of
+ * the image where a sprite sequence is contained. Assumed here is that
+ * the sprites are padded.
+ *
+ * @param img Loaded image to be used as the sprite sheet
+ * @param sprite_cols Number of columns on the sprite sheet
+ * @param sprite_rows Number of rows on the sprite sheet
+ * @param sprite_width Width, in pixels, of each sprite
+ * @param sprite_height Height, in pixels, of each sprite
+ * @param sprite_padding_x Number of pixels padding each sprite on one edge
+ * on the X axis
+ * @param sprite_padding_y Number of pixels padding each sprite on one edge
+ * on the Y axis
+ * @param bounding_box_left_x_pixel The X pixel location of the bounding
+ * box, bounding the portion of the image to be used, starts (top left point)
+ * NOTE: this location should be the start of the first sprite, without padding!
+ * @param bounding_box_top_y_pixel The Y pixel location where the bounding
+ * box, bounding the portion of the image to be used, starts (top left point)
+ * NOTE: this location should be the start of the first sprite, without padding!
+ * @return None NULL handle to reference spritesheet object
+ */
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromPortionOfImagePadded(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_width, unsigned sprite_height,
+    unsigned sprite_padding_x, unsigned sprite_padding_y,
+    unsigned bounding_box_left_x_pixel, unsigned bounding_box_top_y_pixel);
+
+/**
+ * @brief Creates a spritesheet object from a portion of loaded image
+ * where sprites are padded
+ *
+ * Creates a spritesheet and returns a handle to the spritesheet,
+ * the sprite sheet here is assumed to be a mix of sprite sequences,
+ * as such you can create a spritesheet that specifies a portion of
+ * the image where a sprite sequence is contained. Assumed here is that
+ * the sprites are padded.
+ *
+ * It is assumed here that half the spacing can be found as padding around
+ * sprites bordering the edge of the sprite sheet. If this is not the case,
+ * it is reccomended to modify your sprite sheet to add appropriate padding.
+ *
+ * @param img Loaded image to be used as the sprite sheet
+ * @param sprite_cols Number of columns on the sprite sheet
+ * @param sprite_rows Number of rows on the sprite sheet
+ * @param sprite_width Width, in pixels, of each sprite
+ * @param sprite_height Height, in pixels, of each sprite
+ * @param sprite_spacing_x Spacing, in pixels, between images on the X axis
+ * @param sprite_spacing_y Spacing, in pixels, between images on the Y axis
+ * @param bounding_box_left_x_pixel The X pixel location of the bounding
+ * box, bounding the portion of the image to be used, starts (top left point).
+ * NOTE: this location should be the start of the first sprite, without padding!
+ * @param bounding_box_top_y_pixel The Y pixel location where the bounding
+ * box, bounding the portion of the image to be used, starts (top left point)
+ * NOTE: this location should be the start of the first sprite, without padding!
+ * @return None NULL handle to reference spritesheet object
+ */
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromPortionOfImagePaddedSpacing(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_width, unsigned sprite_height,
+    unsigned sprite_spacing_x, unsigned sprite_spacing_y,
+    unsigned bounding_box_left_x_pixel, unsigned bounding_box_top_y_pixel);
 
 /**
  * @brief Draws a sprite from a spritesheet
@@ -537,7 +697,8 @@ int gfxDrawArrow(signed short x1, signed short y1, signed short x2,
  * @param spritesheet The loaded image that contains the spritesheet
  * @return A handle to the created animation object
  */
-gfx_animation_handle_t gfxDrawAnimationCreate(gfx_spritesheet_handle_t spritesheet);
+gfx_animation_handle_t
+gfxDrawAnimationCreate(gfx_spritesheet_handle_t spritesheet);
 
 /**
  * @brief Adds an animation sequence to a previously created animation
@@ -562,6 +723,7 @@ int gfxDrawAnimationAddSequence(
     gfx_animation_handle_t animation, char *name, unsigned start_row,
     unsigned start_col,
     enum sprite_sequence_direction sprite_step_direction, unsigned frames);
+
 /**
  * @brief Creates an instance of an animation from a loaded animation object
  * and a sequence name of a sequence previously added to the animation object
@@ -596,8 +758,8 @@ gfxDrawAnimationSequenceInstantiate(gfx_animation_handle_t animation,
  * sprite frame
  * @return 0 on success
  */
-int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence, unsigned ms_timestep,
-                              int x, int y);
+int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence,
+                              unsigned ms_timestep, int x, int y);
 
 /**
  * @brief Sets the global draw position offset's X axis value

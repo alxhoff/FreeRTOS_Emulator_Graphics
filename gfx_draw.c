@@ -21,7 +21,7 @@
    ----------------------------------------------------------------------
 @endverbatim
  */
-#include <limits.h>
+#include <linux/limits.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
@@ -107,10 +107,16 @@ typedef struct spritesheet_sequence {
 
 typedef struct spritesheet {
     loaded_image_t *image;
+    unsigned x;
+    unsigned y;
+    unsigned width;
+    unsigned height;
     unsigned sprite_width;
     unsigned sprite_height;
     unsigned sprite_cols;
     unsigned sprite_rows;
+    unsigned padding_x;
+    unsigned padding_y;
 } spritesheet_t;
 
 typedef struct animated_image {
@@ -120,7 +126,7 @@ typedef struct animated_image {
 
 typedef struct animated_sequence_instance {
     unsigned frame_period_ms;
-    unsigned current_frame;
+    signed current_frame;
     unsigned prev_frame_timestamp;
     unsigned cur_frame_timestamp;
     animated_image_t *image;
@@ -494,7 +500,8 @@ static int _getImageSize(char *filename, int *w, int *h)
     return 0;
 }
 
-gfx_animation_handle_t gfxDrawAnimationCreate(gfx_spritesheet_handle_t spritesheet)
+gfx_animation_handle_t
+gfxDrawAnimationCreate(gfx_spritesheet_handle_t spritesheet)
 {
     if (spritesheet == NULL) {
         PRINT_ERROR("Creating animation requires a valid spritesheet");
@@ -932,7 +939,7 @@ static int vHandleDrawJob(draw_job_t *job)
 }
 
 #define INIT_JOB(JOB, TYPE)                                                    \
-    draw_job_t *JOB = _pushDrawJob();                                       \
+    draw_job_t *JOB = _pushDrawJob();                                      \
     if (!JOB)                                                              \
         return -1;                                                     \
     union data_u *data = calloc(1, sizeof(union data_u));                  \
@@ -1556,32 +1563,179 @@ int __attribute_deprecated__ gfxDrawImage(char *filename, signed short x,
     return 0;
 }
 
-gfx_spritesheet_handle_t gfxDrawLoadSpritesheet(gfx_image_handle_t img,
-        unsigned sprite_cols,
-        unsigned sprite_rows)
+spritesheet_t *gfxDrawInitSpritesheet(gfx_image_handle_t img)
 {
     if (img == NULL) {
         PRINT_ERROR("No spritesheet provided to load");
-        goto err;
+        return NULL;
     }
 
     spritesheet_t *ret = calloc(1, sizeof(spritesheet_t));
 
     if (ret == NULL) {
         PRINT_ERROR("Could not allocate spritesheet");
-        goto err;
+        return NULL;
     }
 
     ret->image = img;
-    ret->sprite_cols = sprite_cols;
-    ret->sprite_rows = sprite_rows;
-    ret->sprite_width = ret->image->w / sprite_cols;
-    ret->sprite_height = ret->image->h / sprite_rows;
+    ret->width = ((loaded_image_t *)img)->w;
+    ret->height = ((loaded_image_t *)img)->h;
+
+    return ret;
+}
+
+void gfxDrawSpritesheetSetBoundingBox(spritesheet_t *spritesheet,
+                                      unsigned bounding_x, unsigned bounding_y,
+                                      unsigned bounding_w, unsigned bounding_h)
+{
+    spritesheet->x = bounding_x;
+    spritesheet->y = bounding_y;
+    spritesheet->width = bounding_w;
+    spritesheet->height = bounding_h;
+}
+
+void gfxDrawSpritesheetSetPadding(spritesheet_t *spritesheet,
+                                  unsigned padding_x, unsigned padding_y)
+{
+    spritesheet->padding_x = padding_x;
+    spritesheet->padding_y = padding_y;
+}
+
+/**
+ * @brief Sets the number of cols and rows and in turn the sprite
+ * width and height. Should be called AFTER setting the padding
+ * and bounding box
+ *
+ * @param spritesheet Sprite sheet to be set
+ * @param cols Number of columns on the spritesheet
+ * @param rows Number of rows on the spritesheet
+ */
+void gfxDrawSpritesheetSetDivisions(spritesheet_t *spritesheet, unsigned cols,
+                                    unsigned rows)
+{
+    unsigned total_x_padding_pixels =
+        spritesheet->padding_x * (cols - 1) * 2;
+    unsigned total_y_padding_pixels =
+        spritesheet->padding_y * (rows - 1) * 2;
+    spritesheet->sprite_cols = cols;
+    spritesheet->sprite_rows = rows;
+    spritesheet->sprite_width =
+        (spritesheet->width - total_x_padding_pixels) / cols;
+    spritesheet->sprite_height =
+        (spritesheet->height - total_y_padding_pixels) / rows;
+}
+
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromEntireImageUnpadded(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows)
+{
+    spritesheet_t *ret = NULL;
+    if (!(ret = gfxDrawInitSpritesheet(img))) {
+        return NULL;
+    }
+
+    gfxDrawSpritesheetSetDivisions(ret, sprite_cols, sprite_rows);
 
     return (gfx_spritesheet_handle_t)ret;
+}
 
-err:
-    return NULL;
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromEntireImagePadded(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_padding_x, unsigned sprite_padding_y)
+{
+    spritesheet_t *ret = NULL;
+    if (!(ret = gfxDrawInitSpritesheet(img))) {
+        return NULL;
+    }
+
+    gfxDrawSpritesheetSetPadding(ret, sprite_padding_x, sprite_padding_y);
+    gfxDrawSpritesheetSetDivisions(ret, sprite_cols, sprite_rows);
+
+    return (gfx_spritesheet_handle_t)ret;
+}
+
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromEntireImagePaddedSpacing(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_spacing_x, unsigned sprite_spacing_y)
+{
+    spritesheet_t *ret = NULL;
+    if (!(ret = gfxDrawInitSpritesheet(img))) {
+        return NULL;
+    }
+
+    gfxDrawSpritesheetSetPadding(ret, sprite_spacing_x / 2,
+                                 sprite_spacing_y / 2);
+    gfxDrawSpritesheetSetDivisions(ret, sprite_cols, sprite_rows);
+
+    return (gfx_spritesheet_handle_t)ret;
+}
+
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromPortionOfImageUnpadded(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_width, unsigned sprite_height,
+    unsigned bounding_box_left_x_pixel, unsigned bounding_box_top_y_pixel)
+{
+    spritesheet_t *ret = NULL;
+    if (!(ret = gfxDrawInitSpritesheet(img))) {
+        return NULL;
+    }
+
+    gfxDrawSpritesheetSetBoundingBox(ret, bounding_box_left_x_pixel,
+                                     bounding_box_top_y_pixel,
+                                     sprite_width * sprite_cols,
+                                     sprite_height * sprite_rows);
+    gfxDrawSpritesheetSetDivisions(ret, sprite_cols, sprite_rows);
+
+    return (gfx_spritesheet_handle_t)ret;
+}
+
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromPortionOfImagePadded(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_width, unsigned sprite_height,
+    unsigned sprite_padding_x, unsigned sprite_padding_y,
+    unsigned bounding_box_left_x_pixel, unsigned bounding_box_top_y_pixel)
+{
+    spritesheet_t *ret = NULL;
+    if (!(ret = gfxDrawInitSpritesheet(img))) {
+        return NULL;
+    }
+
+    // We do not have padding before first sprite and last sprite for both
+    // width and height, thus sprite_rows/cols - 1 * (padding * 2) total
+    // padding
+    gfxDrawSpritesheetSetBoundingBox(
+        ret, bounding_box_left_x_pixel, bounding_box_top_y_pixel,
+        sprite_cols * sprite_width +
+        (sprite_cols - 1) * sprite_padding_x * 2,
+        sprite_rows * sprite_height +
+        (sprite_rows - 1) * sprite_padding_y * 2);
+    gfxDrawSpritesheetSetPadding(ret, sprite_padding_x, sprite_padding_y);
+    gfxDrawSpritesheetSetDivisions(ret, sprite_cols, sprite_rows);
+
+    return (gfx_spritesheet_handle_t)ret;
+}
+
+gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromPortionOfImagePaddedSpacing(
+    gfx_image_handle_t img, unsigned sprite_cols, unsigned sprite_rows,
+    unsigned sprite_width, unsigned sprite_height,
+    unsigned sprite_spacing_x, unsigned sprite_spacing_y,
+    unsigned bounding_box_left_x_pixel, unsigned bounding_box_top_y_pixel)
+{
+    spritesheet_t *ret = NULL;
+    if (!(ret = gfxDrawInitSpritesheet(img))) {
+        return NULL;
+    }
+
+    gfxDrawSpritesheetSetBoundingBox(
+        ret, bounding_box_left_x_pixel, bounding_box_top_y_pixel,
+        sprite_cols * sprite_width +
+        (sprite_cols - 1) * sprite_spacing_x,
+        sprite_rows * sprite_height +
+        (sprite_rows - 1) * sprite_spacing_y);
+    gfxDrawSpritesheetSetPadding(ret, sprite_spacing_x / 2,
+                                 sprite_spacing_y / 2);
+    gfxDrawSpritesheetSetDivisions(ret, sprite_cols, sprite_rows);
+
+    return (gfx_spritesheet_handle_t)ret;
 }
 
 int gfxDrawSprite(gfx_spritesheet_handle_t spritesheet, char column, char row,
@@ -1614,10 +1768,17 @@ int gfxDrawSprite(gfx_spritesheet_handle_t spritesheet, char column, char row,
         ((spritesheet_t *)spritesheet)->sprite_width;
     job->data->loaded_image_crop.c_h =
         ((spritesheet_t *)spritesheet)->sprite_height;
+
+    // X and Y need to incorporate row or column * 2 + 1 instances of the
+    // sprite's padding
     job->data->loaded_image_crop.c_x =
-        column * ((spritesheet_t *)spritesheet)->sprite_width;
+        column * (((spritesheet_t *)spritesheet)->sprite_width +
+                  ((spritesheet_t *)spritesheet)->padding_x * 2) +
+        ((spritesheet_t *)spritesheet)->padding_x;
     job->data->loaded_image_crop.c_y =
-        row * ((spritesheet_t *)spritesheet)->sprite_height;
+        row * (((spritesheet_t *)spritesheet)->sprite_height +
+               ((spritesheet_t *)spritesheet)->padding_y * 2) +
+        ((spritesheet_t *)spritesheet)->padding_y;
 
     return 0;
 
@@ -1670,8 +1831,8 @@ int gfxDrawArrow(signed short x1, signed short y1, signed short x2,
     return 0;
 }
 
-int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence, unsigned ms_timestep,
-                              int x, int y)
+int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence,
+                              unsigned ms_timestep, int x, int y)
 {
     if (sequence == NULL) {
         PRINT_ERROR("Trying to draw invalid sequence");
@@ -1685,10 +1846,26 @@ int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence, unsigned ms_timest
 
     if (anim->cur_frame_timestamp >
         (anim->prev_frame_timestamp + anim->frame_period_ms)) {
-        anim->current_frame += ((anim->cur_frame_timestamp -
-                                 anim->prev_frame_timestamp) /
-                                anim->frame_period_ms);
-        anim->current_frame %= anim->sequence->frames;
+        if (anim->sequence->direction ==
+            SPRITE_SEQUENCE_HORIZONTAL_POS ||
+            anim->sequence->direction == SPRITE_SEQUENCY_VERTICAL_POS) {
+            anim->current_frame += ((anim->cur_frame_timestamp -
+                                     anim->prev_frame_timestamp) /
+                                    anim->frame_period_ms);
+            anim->current_frame %= anim->sequence->frames;
+        }
+        else if (anim->sequence->direction ==
+                 SPRITE_SEQUENCE_HORIZONTAL_NEG ||
+                 anim->sequence->direction ==
+                 SPRITE_SEQUENCY_VERTICAL_NEG) {
+            anim->current_frame -= ((anim->cur_frame_timestamp -
+                                     anim->prev_frame_timestamp) /
+                                    anim->frame_period_ms);
+            if (anim->current_frame == -1)
+                anim->current_frame =
+                    anim->sequence->frames - 1;
+        }
+
         anim->prev_frame_timestamp += (((anim->cur_frame_timestamp -
                                          anim->prev_frame_timestamp) /
                                         anim->frame_period_ms) *
@@ -1708,43 +1885,42 @@ int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence, unsigned ms_timest
 
     switch (anim->sequence->direction) {
         case SPRITE_SEQUENCE_HORIZONTAL_POS:
+        case SPRITE_SEQUENCE_HORIZONTAL_NEG: {
+            unsigned cur_frame_index_offset =
+                (anim->current_frame + anim->sequence->start_col) %
+                anim->sequence->frames;
             job->data->loaded_image_crop.c_x =
-                (anim->current_frame + anim->sequence->start_col) *
-                anim->image->spritesheet->sprite_width;
+                anim->image->spritesheet->x +
+                cur_frame_index_offset *
+                (anim->image->spritesheet->sprite_width +
+                 anim->image->spritesheet->padding_x * 2);
             job->data->loaded_image_crop.c_y =
+                anim->image->spritesheet->y +
                 anim->sequence->start_row *
-                anim->image->spritesheet->sprite_height;
-            break;
-        case SPRITE_SEQUENCE_HORIZONTAL_NEG:
-            job->data->loaded_image_crop.c_x =
-                (anim->sequence->start_col - anim->current_frame) *
-                anim->image->spritesheet->sprite_width;
-            job->data->loaded_image_crop.c_y =
-                anim->sequence->start_row *
-                anim->image->spritesheet->sprite_height;
-            break;
+                (anim->image->spritesheet->sprite_height +
+                 anim->image->spritesheet->padding_y * 2);
+        } break;
         case SPRITE_SEQUENCY_VERTICAL_POS:
+        case SPRITE_SEQUENCY_VERTICAL_NEG: {
+            unsigned cur_frame_index_offset =
+                (anim->current_frame + anim->sequence->start_row) %
+                anim->sequence->frames;
             job->data->loaded_image_crop.c_x =
+                anim->image->spritesheet->x +
                 anim->sequence->start_col *
-                anim->image->spritesheet->sprite_height;
+                (anim->image->spritesheet->sprite_width +
+                 anim->image->spritesheet->padding_x * 2);
             job->data->loaded_image_crop.c_y =
-                (anim->current_frame + anim->sequence->start_row) *
-                anim->image->spritesheet->sprite_width;
-            break;
-        case SPRITE_SEQUENCY_VERTICAL_NEG:
-            job->data->loaded_image_crop.c_x =
-                anim->sequence->start_col *
-                anim->image->spritesheet->sprite_height;
-            job->data->loaded_image_crop.c_y =
-                (anim->sequence->start_row - anim->current_frame) *
-                anim->image->spritesheet->sprite_width;
-            break;
+                anim->image->spritesheet->y +
+                cur_frame_index_offset *
+                (anim->image->spritesheet->sprite_height +
+                 anim->image->spritesheet->padding_y * 2);
+        } break;
         default:
             break;
     }
 
     return 0;
-
 err:
     return -1;
 }
