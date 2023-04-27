@@ -1831,6 +1831,26 @@ int gfxDrawArrow(signed short x1, signed short y1, signed short x2,
     return 0;
 }
 
+void gfxDrawAnimationReset(gfx_sequence_handle_t sequence)
+{
+    animated_sequence_instance_t *anim =
+        (animated_sequence_instance_t *)sequence;
+
+    anim->prev_frame_timestamp = 0;
+    anim->cur_frame_timestamp = 0;
+
+    if (anim->sequence->direction ==
+        SPRITE_SEQUENCE_HORIZONTAL_POS ||
+        anim->sequence->direction == SPRITE_SEQUENCE_HORIZONTAL_NEG) {
+        anim->current_frame = anim->sequence->start_col;
+    }
+    else if (anim->sequence->direction ==
+             SPRITE_SEQUENCE_VERTICAL_POS ||
+             anim->sequence->direction == SPRITE_SEQUENCE_VERTICAL_NEG) {
+        anim->current_frame = anim->sequence->start_row;
+    }
+}
+
 int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence,
                               unsigned ms_timestep, int x, int y)
 {
@@ -1846,9 +1866,10 @@ int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence,
 
     if (anim->cur_frame_timestamp >
         (anim->prev_frame_timestamp + anim->frame_period_ms)) {
+
         if (anim->sequence->direction ==
             SPRITE_SEQUENCE_HORIZONTAL_POS ||
-            anim->sequence->direction == SPRITE_SEQUENCY_VERTICAL_POS) {
+            anim->sequence->direction == SPRITE_SEQUENCE_VERTICAL_POS) {
             anim->current_frame += ((anim->cur_frame_timestamp -
                                      anim->prev_frame_timestamp) /
                                     anim->frame_period_ms);
@@ -1857,7 +1878,7 @@ int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence,
         else if (anim->sequence->direction ==
                  SPRITE_SEQUENCE_HORIZONTAL_NEG ||
                  anim->sequence->direction ==
-                 SPRITE_SEQUENCY_VERTICAL_NEG) {
+                 SPRITE_SEQUENCE_VERTICAL_NEG) {
             anim->current_frame -= ((anim->cur_frame_timestamp -
                                      anim->prev_frame_timestamp) /
                                     anim->frame_period_ms);
@@ -1900,8 +1921,8 @@ int gfxDrawAnimationDrawFrame(gfx_sequence_handle_t sequence,
                 (anim->image->spritesheet->sprite_height +
                  anim->image->spritesheet->padding_y * 2);
         } break;
-        case SPRITE_SEQUENCY_VERTICAL_POS:
-        case SPRITE_SEQUENCY_VERTICAL_NEG: {
+        case SPRITE_SEQUENCE_VERTICAL_POS:
+        case SPRITE_SEQUENCE_VERTICAL_NEG: {
             unsigned cur_frame_index_offset =
                 (anim->current_frame + anim->sequence->start_row) %
                 anim->sequence->frames;

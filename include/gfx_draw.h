@@ -111,8 +111,8 @@
 enum sprite_sequence_direction {
     SPRITE_SEQUENCE_HORIZONTAL_POS,
     SPRITE_SEQUENCE_HORIZONTAL_NEG,
-    SPRITE_SEQUENCY_VERTICAL_POS,
-    SPRITE_SEQUENCY_VERTICAL_NEG,
+    SPRITE_SEQUENCE_VERTICAL_POS,
+    SPRITE_SEQUENCE_VERTICAL_NEG,
 };
 
 /**
@@ -739,6 +739,14 @@ gfx_sequence_handle_t
 gfxDrawAnimationSequenceInstantiate(gfx_animation_handle_t animation,
                                     char *sequence_name,
                                     unsigned frame_period_ms);
+
+/**
+ * @brief Resets the time and frame of an animation back to its initial
+ * configuration
+ *
+ * @param sequence Animation sequence that should be reset
+ */
+void gfxDrawAnimationReset(gfx_sequence_handle_t sequence);
 
 /**
  * @brief Draws the target intantiated animation sequence at a given location
