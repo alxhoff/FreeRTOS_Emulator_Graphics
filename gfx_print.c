@@ -41,7 +41,7 @@ struct error_print_msg {
 };
 
 char rbuf_buffer[sizeof(struct error_print_msg) *
-                               SAFE_PRINT_INPUT_BUFFER_COUNT] = { 0 };
+                 SAFE_PRINT_INPUT_BUFFER_COUNT] = { 0 };
 
 #ifdef SAFE_PRINT_DEBUG
 xSemaphoreHandle input_debug_count = NULL;
