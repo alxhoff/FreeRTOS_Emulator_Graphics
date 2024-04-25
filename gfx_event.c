@@ -146,9 +146,9 @@ static void _SDLFetchEvents(void)
 int gfxEventFetchEvents(int flags)
 {
     if (!((flags >> FETCH_NO_GL_CHECK_S) & 0x1))
-        if (!gfxUtilIsCurGLThread()) {
+        if (gfxUtilIsCurGLThread()) {
             gfxDrawBindThread();
-            if (!gfxUtilIsCurGLThread()) {
+            if (gfxUtilIsCurGLThread()) {
                 PRINT_ERROR(
                     "Fetching events from task that does not hold GL context");
                 return -1;

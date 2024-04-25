@@ -982,7 +982,7 @@ int gfxDrawUpdateScreen(void)
 {
     gfxDrawBindThread(); // Setup Rendering handle with correct GL context
 
-    if (!gfxUtilIsCurGLThread()) {
+    if (gfxUtilIsCurGLThread()) {
         PRINT_ERROR(
             "Updating screen from thread that does not hold GL context");
         goto err;
@@ -1123,7 +1123,7 @@ err_sdl:
 
 int gfxDrawBindThread(void) // Should be called from the Drawing Thread
 {
-    if (!gfxUtilIsCurGLThread() || !renderer) {
+    if (gfxUtilIsCurGLThread() || !renderer) {
         if (SDL_GL_MakeCurrent(window, context) < 0) {
             PRINT_SDL_ERROR("Releasing current context failed");
             goto err_make_current;
@@ -1381,7 +1381,7 @@ int gfxDrawTriangle(coord_t *points, unsigned int colour)
 
 gfx_image_handle_t gfxDrawLoadScaledImage(char *filename, float scale)
 {
-    if (!renderer || !gfxUtilIsCurGLThread()) {
+    if (!renderer || gfxUtilIsCurGLThread()) {
         gfxDrawBindThread();
         if (!renderer) {
             goto err_renderer;
