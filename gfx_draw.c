@@ -276,10 +276,10 @@ char *error_message = NULL;
 
 static uint32_t swapBytes(unsigned int x)
 {
-    return ((x & FIRST_BYTE) << THREE_BYTES) +
-           ((x & SECOND_BYTE) << ONE_BYTE) +
-           ((x & THIRD_BYTE) >> ONE_BYTE) +
-           ((x & FOURTH_BYTE) >> THREE_BYTES);
+    return ((x &FIRST_BYTE) << THREE_BYTES) +
+           ((x &SECOND_BYTE) << ONE_BYTE) +
+           ((x &THIRD_BYTE) >> ONE_BYTE) +
+           ((x &FOURTH_BYTE) >> THREE_BYTES);
 }
 
 void _setErrorMessage(char *msg)
@@ -690,8 +690,8 @@ int xDrawLoadedImageCropped(loaded_image_t *img, SDL_Renderer *ren,
 int xDrawLoadedImage(loaded_image_t *img, SDL_Renderer *ren, signed short x,
                      signed short y)
 {
-    return _renderScaledImage(img->tex, ren, x, y, img->w * img->scale,
-                              img->h * img->scale);
+    return _renderScaledImage(img->tex, ren, x, y, img->w *img->scale,
+                              img->h *img->scale);
 }
 
 static int _drawScaledImage(SDL_Texture *tex, SDL_Renderer *ren, signed short x,
@@ -779,19 +779,19 @@ static int _drawArrow(signed short x1, signed short y1, signed short x2,
     unsigned short dy = y2 - y1;
 
     // Normalize
-    float length = sqrt(dx * dx + dy * dy);
+    float length = sqrt(dx *dx + dy *dy);
     signed short unit_dx = (signed short)(dx / length);
     signed short unit_dy = (signed short)(dy / length);
 
     signed short head_x1 =
-        roundf(x2 - unit_dx * head_length - unit_dy * head_length);
+        roundf(x2 - unit_dx *head_length - unit_dy *head_length);
     signed short head_y1 =
-        roundf(y2 - unit_dy * head_length + unit_dx * head_length);
+        roundf(y2 - unit_dy *head_length + unit_dx *head_length);
 
     signed short head_x2 =
-        roundf(x2 - unit_dx * head_length + unit_dy * head_length);
+        roundf(x2 - unit_dx *head_length + unit_dy *head_length);
     signed short head_y2 =
-        roundf(y2 - unit_dy * head_length - unit_dx * head_length);
+        roundf(y2 - unit_dy *head_length - unit_dx *head_length);
 
     if (thickLineColor(renderer, x1, y1, x2, y2, thickness,
                        swapBytes((colour << ONE_BYTE) | ALPHA_SOLID))) {
@@ -1681,8 +1681,8 @@ gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromPortionOfImageUnpadded(
 
     gfxDrawSpritesheetSetBoundingBox(ret, bounding_box_left_x_pixel,
                                      bounding_box_top_y_pixel,
-                                     sprite_width * sprite_cols,
-                                     sprite_height * sprite_rows);
+                                     sprite_width *sprite_cols,
+                                     sprite_height *sprite_rows);
     gfxDrawSpritesheetSetDivisions(ret, sprite_cols, sprite_rows);
 
     return (gfx_spritesheet_handle_t)ret;
@@ -1704,9 +1704,9 @@ gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromPortionOfImagePadded(
     // padding
     gfxDrawSpritesheetSetBoundingBox(
         ret, bounding_box_left_x_pixel, bounding_box_top_y_pixel,
-        sprite_cols * sprite_width +
+        sprite_cols *sprite_width +
         (sprite_cols - 1) * sprite_padding_x * 2,
-        sprite_rows * sprite_height +
+        sprite_rows *sprite_height +
         (sprite_rows - 1) * sprite_padding_y * 2);
     gfxDrawSpritesheetSetPadding(ret, sprite_padding_x, sprite_padding_y);
     gfxDrawSpritesheetSetDivisions(ret, sprite_cols, sprite_rows);
@@ -1727,9 +1727,9 @@ gfx_spritesheet_handle_t gfxDrawLoadSpritesheetFromPortionOfImagePaddedSpacing(
 
     gfxDrawSpritesheetSetBoundingBox(
         ret, bounding_box_left_x_pixel, bounding_box_top_y_pixel,
-        sprite_cols * sprite_width +
+        sprite_cols *sprite_width +
         (sprite_cols - 1) * sprite_spacing_x,
-        sprite_rows * sprite_height +
+        sprite_rows *sprite_height +
         (sprite_rows - 1) * sprite_spacing_y);
     gfxDrawSpritesheetSetPadding(ret, sprite_spacing_x / 2,
                                  sprite_spacing_y / 2);

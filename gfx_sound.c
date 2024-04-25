@@ -36,8 +36,8 @@
 
 #define AUDIO_CHANNELS 2
 #define MIXING_CHANNELS 4
-
-#define GEN_FULL_SAMPLE_PATH(SAMPLE) SAMPLE_FOLDER #SAMPLE ".wav",
+#define GEN_FULL_SAMPLE_PATH(SAMPLE) \
+    SAMPLE_FOLDER #SAMPLE ".wav",
 
 Mix_Chunk *samples[NUM_WAVEFORMS] = { 0 };
 

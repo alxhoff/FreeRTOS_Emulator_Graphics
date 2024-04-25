@@ -365,7 +365,7 @@ int gfxRbufPut(rbuf_handle_t rbuf, void *data)
         return -1;
     }
 
-    memcpy(rb->buffer + rb->head * rb->item_size, data, rb->item_size);
+    memcpy(rb->buffer + rb->head *rb->item_size, data, rb->item_size);
 
     _inc_buf(rb);
 
@@ -385,7 +385,7 @@ int gfxRbufFPut(rbuf_handle_t rbuf, void *data)
         return -1;
     }
 
-    memcpy(rb->buffer + rb->head * rb->item_size, data, rb->item_size);
+    memcpy(rb->buffer + rb->head *rb->item_size, data, rb->item_size);
 
     _inc_buf(rb);
 
@@ -438,7 +438,7 @@ int gfxRbufGet(rbuf_handle_t rbuf, void *data)
         return -1;
     }
 
-    memcpy(data, rb->buffer + rb->tail * rb->item_size, rb->item_size);
+    memcpy(data, rb->buffer + rb->tail *rb->item_size, rb->item_size);
     _dec_buf(rb);
 
     return 0;
